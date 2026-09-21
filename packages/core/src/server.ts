@@ -1,4 +1,4 @@
-// Server-only entry point for @metamen/sdk.
+// Server-only entry point for @metamen/core.
 // Capture, void, and refund authenticate with the Kashier secret key, which must
 // never reach a browser bundle. Never import this module from client code.
 

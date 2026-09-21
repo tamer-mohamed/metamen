@@ -5,7 +5,7 @@
 Turborepo monorepo (pnpm workspaces):
 
 - `apps/ecommerce` — Next.js demo storefront.
-- `packages/sdk` — `@metamen/sdk`, the SDK merchants install to capture Kashier payments and track fulfillment.
+- `packages/core` — `@metamen/core`, the framework-agnostic domain layer for capturing Kashier payments and tracking fulfillment. Plain TypeScript, no framework dependencies, so it can back any install form factor (script tag, plugin, npm package, hosted backend).
 
 Run tasks from the repo root via `turbo run <task>` (e.g. `pnpm dev`, `pnpm build`), not by `cd`-ing into a package.
 
@@ -22,7 +22,7 @@ Kashier's API on `fep.kashier.io` uses two different auth schemes on the same ho
 ## Secrets
 Never name any environment variable holding a Kashier secret with a `NEXT_PUBLIC_` prefix — that prefix ships to the browser bundle in Next.js.
 
-`@metamen/sdk` enforces this split at the package boundary: `@metamen/sdk` is the browser-safe entry and must never touch the secret key, while `@metamen/sdk/server` holds every secret-key operation (capture, void, refund). Never import the `/server` entry from client code.
+`@metamen/core` enforces this split at the package boundary: `@metamen/core` is the browser-safe entry and must never touch the secret key, while `@metamen/core/server` holds every secret-key operation (capture, void, refund). Never import the `/server` entry from client code.
 
 ## Persisting the Kashier transactionId
 The `transactionId` returned when an order is authorized must be persisted to the database before acknowledging the request to the caller. It is the only way to void or capture that hold later — losing it means the hold cannot be released.

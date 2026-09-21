@@ -1,4 +1,4 @@
-import { formatPiastres } from "@metamen/sdk";
+import { formatPiastres } from "@metamen/core";
 import type { Product } from "@/types/product";
 import ProductImage from "./ProductImage";
 
