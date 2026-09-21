@@ -1,12 +1,6 @@
+import { formatPiastres } from "@metamen/sdk";
 import type { Product } from "@/types/product";
 import ProductImage from "./ProductImage";
-
-function formatPiastres(priceInPiastres: number): string {
-  return new Intl.NumberFormat("en-EG", {
-    style: "currency",
-    currency: "EGP",
-  }).format(priceInPiastres / 100);
-}
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
