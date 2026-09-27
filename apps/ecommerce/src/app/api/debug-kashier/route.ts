@@ -1,6 +1,21 @@
 export async function GET() {
   const results: Record<string, unknown> = {};
 
+  const secretKey = process.env.KASHIER_TEST_SECRET_KEY ?? "";
+  const apiKey = process.env.KASHIER_TEST_API_KEY ?? "";
+  results.secretKeyShape = {
+    length: secretKey.length,
+    containsBackslash: secretKey.includes("\\"),
+    containsDollar: secretKey.includes("$"),
+    startsWithBackslash: secretKey.startsWith("\\"),
+    firstTwoCharCodes: [...secretKey.slice(0, 2)].map((c) => c.charCodeAt(0)),
+  };
+  results.apiKeyShape = {
+    length: apiKey.length,
+    containsBackslash: apiKey.includes("\\"),
+    containsDollar: apiKey.includes("$"),
+  };
+
   try {
     const ipRes = await fetch("https://api.ipify.org?format=json");
     results.egressIp = await ipRes.json();
