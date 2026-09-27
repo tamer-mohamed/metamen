@@ -56,16 +56,12 @@ export async function createPaymentSession(
       merchantRedirect: params.merchantRedirect,
       display: "en",
       type: "one-time",
-      // Restricted to methods confirmed or expected to work for this merchant
-      // account. InstaPay was previously excluded after reproducing a live
-      // "Invalid Merchant ID" failure at payment time (an account-side
-      // provisioning gap, not something a request parameter can fix) — it's
-      // back in the list, so re-verify end-to-end before relying on it. Only
-      // "card" has been proven end-to-end; wallet/bank_installments/instaPay
-      // are included because they're presented as primary (non-overflow)
-      // methods alongside card, not because they've been independently
-      // verified.
-      allowedMethods: "card,wallet,bank_installments,instaPay",
+      // Restricted to wallet + InstaPay only, per request. Neither has been
+      // proven end-to-end here yet — InstaPay previously failed live with
+      // "Invalid Merchant ID" (an account-side provisioning gap, not
+      // something a request parameter can fix) before being re-included, so
+      // verify both complete a real payment before relying on this set.
+      allowedMethods: "wallet,instaPay",
       // Cosmetic — themes the hosted checkout (redirect or embedded) to match
       // this storefront's palette (apps/ecommerce/src/components/product).
       brandColor: "#45543F",
