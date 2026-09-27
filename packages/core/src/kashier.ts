@@ -56,16 +56,16 @@ export async function createPaymentSession(
       merchantRedirect: params.merchantRedirect,
       display: "en",
       type: "one-time",
-      // Restricted to methods confirmed working for this merchant account.
-      // InstaPay is offered by Kashier's own checkout UI but fails at payment
-      // time with "Invalid Merchant ID" — an account-side provisioning gap on
-      // Kashier's end (reproduced live; card works fine with the same
-      // merchant id), not something a request parameter can fix. Excluded
-      // here rather than left as a guaranteed-to-fail option in the UI.
-      // Only "card" has been proven end-to-end; wallet/bank_installments are
-      // included because they're presented as primary (non-overflow) methods
-      // alongside card, not because they've been independently verified.
-      // allowedMethods: "instaPay,wallet",
+      // Restricted to methods confirmed or expected to work for this merchant
+      // account. InstaPay was previously excluded after reproducing a live
+      // "Invalid Merchant ID" failure at payment time (an account-side
+      // provisioning gap, not something a request parameter can fix) — it's
+      // back in the list, so re-verify end-to-end before relying on it. Only
+      // "card" has been proven end-to-end; wallet/bank_installments/instaPay
+      // are included because they're presented as primary (non-overflow)
+      // methods alongside card, not because they've been independently
+      // verified.
+      allowedMethods: "card,wallet,bank_installments,instaPay",
       // Cosmetic — themes the hosted checkout (redirect or embedded) to match
       // this storefront's palette (apps/ecommerce/src/components/product).
       brandColor: "#45543F",
