@@ -1,0 +1,98 @@
+import type { Order } from "@/types/order";
+
+export const orders: Order[] = [
+  {
+    id: "ord-1001",
+    productName: "Canvas Tote Bag",
+    amountInPiastres: 45000,
+    paymentState: "captured",
+    orderDate: "2026-09-02",
+    customerName: "Sara Ahmed",
+    customerEmail: "sara.ahmed@example.com",
+  },
+  {
+    id: "ord-1002",
+    productName: "Classic Leather Sneakers",
+    amountInPiastres: 129900,
+    paymentState: "captured",
+    orderDate: "2026-09-05",
+    customerName: "Omar Khaled",
+    customerEmail: "omar.khaled@example.com",
+  },
+  {
+    id: "ord-1003",
+    productName: "Minimalist Wool Sweater",
+    amountInPiastres: 89900,
+    paymentState: "authorized",
+    orderDate: "2026-09-08",
+    customerName: "Mona Farouk",
+    customerEmail: "mona.farouk@example.com",
+  },
+  {
+    id: "ord-1004",
+    productName: "Ceramic Pour-Over Set",
+    amountInPiastres: 65000,
+    paymentState: "voided",
+    orderDate: "2026-09-10",
+    customerName: "Youssef Adel",
+    customerEmail: "youssef.adel@example.com",
+  },
+  {
+    id: "ord-1005",
+    productName: "Wireless Earbuds",
+    amountInPiastres: 249900,
+    paymentState: "captured",
+    orderDate: "2026-09-12",
+    customerName: "Nourhan Samir",
+    customerEmail: "nourhan.samir@example.com",
+  },
+  {
+    id: "ord-1006",
+    productName: "Leather Wallet",
+    amountInPiastres: 55000,
+    paymentState: "refunded",
+    orderDate: "2026-09-14",
+    customerName: "Sara Ahmed",
+    customerEmail: "sara.ahmed@example.com",
+  },
+  {
+    id: "ord-1007",
+    productName: "Trail Running Shoes",
+    amountInPiastres: 159900,
+    paymentState: "authorized",
+    orderDate: "2026-09-17",
+    customerName: "Karim Hassan",
+    customerEmail: "karim.hassan@example.com",
+  },
+  {
+    id: "ord-1008",
+    productName: "Desk Lamp",
+    amountInPiastres: 75000,
+    paymentState: "captured",
+    orderDate: "2026-09-19",
+    customerName: "Karim Hassan",
+    customerEmail: "karim.hassan@example.com",
+  },
+  {
+    id: "ord-1009",
+    productName: "Ceramic Mug Set",
+    amountInPiastres: 38000,
+    paymentState: "voided",
+    orderDate: "2026-09-21",
+    customerName: "Mona Farouk",
+    customerEmail: "mona.farouk@example.com",
+  },
+  {
+    id: "ord-1010",
+    productName: "Bluetooth Speaker",
+    amountInPiastres: 189900,
+    paymentState: "refunded",
+    orderDate: "2026-09-24",
+    customerName: "Nourhan Samir",
+    customerEmail: "nourhan.samir@example.com",
+  },
+];
+
+export function findOrderById(id: string): Order | undefined {
+  return orders.find((order) => order.id === id);
+}
