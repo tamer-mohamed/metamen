@@ -21,6 +21,9 @@ export const products: Product[] = [
     priceInPiastres: 89900,
     imageSrc: "/products/wool-sweater.svg",
     category: "Apparel",
+    description:
+      "Brushed merino, knit a little heavier for the months you actually need a sweater. Relaxed through the body, with ribbed cuffs and hem that hold their shape.",
+    sizes: ["S", "M", "L", "XL"],
   },
   {
     id: "ceramic-pour-over-set",

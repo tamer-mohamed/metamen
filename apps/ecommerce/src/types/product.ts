@@ -5,4 +5,8 @@ export interface Product {
   priceInPiastres: number;
   imageSrc: string;
   category: string;
+  /** Optional — not every product has detail copy yet. */
+  description?: string;
+  /** Optional — only shown on the detail page when present. */
+  sizes?: string[];
 }

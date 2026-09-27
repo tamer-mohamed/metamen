@@ -1,10 +1,11 @@
+import Link from "next/link";
 import { formatPiastres } from "@metamen/core";
 import type { Product } from "@/types/product";
 import ProductImage from "./ProductImage";
 
 export default function ProductCard({ product }: { product: Product }) {
   return (
-    <article className="flex flex-col">
+    <Link href={`/products/${product.id}`} className="flex flex-col">
       <div className="relative aspect-square overflow-hidden rounded-lg bg-black/5 dark:bg-white/5">
         <ProductImage src={product.imageSrc} alt={product.name} />
       </div>
@@ -15,6 +16,6 @@ export default function ProductCard({ product }: { product: Product }) {
       <p className="mt-1 text-sm font-semibold sm:text-base">
         {formatPiastres(product.priceInPiastres)}
       </p>
-    </article>
+    </Link>
   );
 }

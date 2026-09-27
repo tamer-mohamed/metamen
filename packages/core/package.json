@@ -19,13 +19,15 @@
   "scripts": {
     "build": "tsc",
     "check-types": "tsc --noEmit",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "test": "vitest run"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",
     "@types/node": "^20",
     "eslint": "^9",
     "typescript": "^5",
-    "typescript-eslint": "^8.70.0"
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^2.1.9"
   }
 }
