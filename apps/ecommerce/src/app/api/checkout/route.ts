@@ -44,9 +44,7 @@ export async function POST(request: NextRequest) {
 
     return Response.json({ url: session.sessionUrl }, { status: 201 });
   } catch (error) {
-    if (process.env.NODE_ENV !== "production") {
-      console.error("[api/checkout] session creation failed:", error);
-    }
+    console.error("[api/checkout] session creation failed:", error);
     return Response.json({ error: "session_creation_failed" }, { status: 502 });
   }
 }
