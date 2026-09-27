@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+
+  /* Chart tokens — see dataviz skill's reference palette (light mode). */
+  --chart-text-secondary: #52514e;
+  --chart-muted: #898781;
+  --chart-grid: #e1e0d9;
+  --chart-baseline: #c3c2b7;
+  --series-revenue: #2a78d6; /* categorical slot 1, blue */
+  --series-orders: #eb6834; /* categorical slot 2, orange */
+  --series-returns: #e34948; /* categorical slot 8, red */
+  --state-authorized: #eda100; /* categorical slot 4, yellow */
+  --state-captured: #1baf7a; /* categorical slot 3, aqua */
+  --state-voided: var(--chart-muted);
+  --state-refunded: var(--series-revenue);
+  --donut-slice-5: #e87ba4; /* categorical slot 5, magenta */
+  --meter-track: #dde8f9; /* sequential blue, step ~150 */
+  --meter-fill: var(--series-revenue);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+
+    /* Chart tokens (dark mode) — same slots, stepped for the dark surface. */
+    --chart-text-secondary: #c3c2b7;
+    --chart-muted: #898781;
+    --chart-grid: #2c2c2a;
+    --chart-baseline: #383835;
+    --series-revenue: #3987e5;
+    --series-orders: #d95926;
+    --series-returns: #e66767;
+    --state-authorized: #c98500;
+    --state-captured: #199e70;
+    --state-voided: var(--chart-muted);
+    --state-refunded: var(--series-revenue);
+    --donut-slice-5: #d55181;
+    --meter-track: #1e2f42;
+    --meter-fill: var(--series-revenue);
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes chart-draw-in {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes chart-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes chart-grow-in {
+  from {
+    transform: scaleY(0);
+  }
+  to {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes chart-grow-x {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [style*="chart-draw-in"],
+  [style*="chart-fade-in"],
+  [style*="chart-grow-in"],
+  [style*="chart-grow-x"] {
+    animation: none !important;
+    opacity: 1 !important;
+    stroke-dashoffset: 0 !important;
+    transform: none !important;
+  }
+}
