@@ -31,6 +31,9 @@ export async function POST(request: NextRequest) {
       {
         productId: product.id,
         amountInPiastres: product.priceInPiastres,
+        connectedAccount: {
+          merchantId: "MID-XXXXX-XXX"
+        },
         // Kashier rejects "localhost" as a merchantRedirect hostname (it
         // requires a publicly-resolvable-looking domain), so local dev needs
         // a tunnel (e.g. ngrok) exposed via PUBLIC_APP_URL. Falls back to the
