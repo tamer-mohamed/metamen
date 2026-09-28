@@ -8,3 +8,10 @@ export {
   isValidPiastres,
   type Piastres,
 } from "./money.js";
+
+export {
+  decidePaymentAction,
+  type FulfillmentStatus,
+  type FulfillmentUpdate,
+  type PaymentAction,
+} from "./fulfillment.js";

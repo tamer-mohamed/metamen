@@ -22,3 +22,5 @@ export {
   type KashierOrderActionResult,
   type PaymentSession,
 } from "./kashier.js";
+
+export { applyFulfillmentUpdate } from "./orchestration.js";
