@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   captureOrder,
+  getTransaction,
   piastresToKashierAmount,
   refundOrder,
   voidOrder,
@@ -104,6 +105,36 @@ describe("captureOrder / voidOrder / refundOrder", () => {
 
     await expect(captureOrder(config, { orderId: "ORD-1" })).rejects.toThrow(
       /capture request failed with status 400/,
+    );
+  });
+});
+
+describe("getTransaction", () => {
+  const config = { secretKey: "test-secret" };
+
+  it("looks up a transaction on the transactions host, not the sessions or orders host", async () => {
+    const fetchMock = mockFetchOnce(200, { status: "SUCCESS", lastStatus: "CAPTURED" });
+
+    const result = await getTransaction(config, "TX-1");
+
+    expect(fetchMock).toHaveBeenCalledWith(
+      "https://test-api.kashier.io/v2/aggregator/transactions/TX-1",
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: "test-secret" }),
+      }),
+    );
+    expect(result).toEqual({
+      status: "SUCCESS",
+      lastStatus: "CAPTURED",
+      raw: { status: "SUCCESS", lastStatus: "CAPTURED" },
+    });
+  });
+
+  it("throws when Kashier can't find the transaction", async () => {
+    mockFetchOnce(404, { message: "not found" });
+
+    await expect(getTransaction(config, "TX-missing")).rejects.toThrow(
+      /transaction lookup failed with status 404/,
     );
   });
 });

@@ -27,6 +27,8 @@ Capture, void and refund (`PUT /v3/orders/:orderId`, on `fep.kashier.io` / `test
 
 **Void has a same-day window; refund doesn't.** Voiding a `PAY` or `CAPTURE` transaction only works same-day — past it, use refund instead. Voiding an unused `AUTHORIZE` hold (a release) is not subject to that window.
 
+**Re-verifying a transaction is a different endpoint entirely.** `PUT /v3/orders/:orderId` has no `GET` (confirmed empirically — it 400s "routing key is missing from the URL"). To look up a transaction's real status before trusting a webhook, use `GET /v2/aggregator/transactions/:transactionId` on `api.kashier.io` / `test-api.kashier.io` — a *third* host/path family, keyed by `transactionId` (not `orderId`), with the secret key as `Authorization` and no other headers.
+
 ## Secrets
 Never name any environment variable holding a Kashier secret with a `NEXT_PUBLIC_` prefix — that prefix ships to the browser bundle in Next.js.
 
@@ -57,6 +59,11 @@ The `transactionId` returned when an order is authorized must be persisted to th
 
 ## Webhooks are not authoritative
 Never treat a webhook alone as authoritative for releasing money. Always re-verify the order status by polling Kashier's API before any capture or void that a webhook triggers.
+
+`apps/ecommerce/src/app/api/webhooks/fulfillment/route.ts` implements this for fulfillment-driven refunds: it re-verifies via `getTransaction` before calling `applyFulfillmentUpdate` (`@metamen/core/server`'s `applyVerifiedFulfillmentUpdate`). Two things this endpoint does **not** do, both worth fixing once their dependencies exist:
+- **It can't verify the fulfillment claim itself** — only that the Kashier transaction is real and `SUCCESS`. Confirming a courier really did mark an order `DELIVERED`/`RETURNED` needs a real carrier integration (still gated on #23), not just a Kashier lookup.
+- **It has no real auth scheme** — a shared secret (`FULFILLMENT_WEBHOOK_SECRET`, header `x-webhook-secret`) stands in for a real carrier's signature scheme, because no real carrier is integrated yet to define one.
+- **It has no persistence to look up `kashierOrderId`/`kashierTransactionId` from** — the caller must supply both directly, rather than the route looking them up by its own order reference.
 
 ## Payment state vs. fulfillment state
 Payment state (authorized/captured/voided/refunded) and fulfillment state (created/shipped/delivered/failed/returned) are separate state machines. Do not collapse them into one status field.

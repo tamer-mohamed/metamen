@@ -220,3 +220,60 @@ export function refundOrder(
   const { reason, ...rest } = params;
   return mutateOrder(config, "REFUND", rest, reason);
 }
+
+// Transaction lookup lives on yet another host (api, not fep) and vocabulary
+// (SUCCESS/FAILURE/PENDING "stored status", same as webhooks — not the
+// capitalized Approved/Rejected/Unknown the list endpoint projects).
+const DEFAULT_TRANSACTIONS_BASE_URL = "https://test-api.kashier.io";
+
+export interface GetTransactionConfig {
+  secretKey: string;
+  /** Overridable for testing; defaults to the Kashier test transactions API. */
+  baseUrl?: string;
+}
+
+export interface KashierTransaction {
+  status: "SUCCESS" | "FAILURE" | "PENDING" | string;
+  /** The order's money state (e.g. CAPTURED) — distinct from this transaction's own status. */
+  lastStatus?: string;
+  raw: unknown;
+}
+
+/**
+ * Looks up a transaction by id directly from Kashier — the only
+ * re-verification available for a webhook-driven action, since Kashier has
+ * no documented GET on the /v3/orders/:orderId capture/void/refund endpoint
+ * (confirmed empirically: it 400s "routing key is missing" for GET). Callers
+ * driving money off an inbound webhook must not act on that webhook's claims
+ * alone — fetch the transaction here first (CLAUDE.md: "Webhooks are not
+ * authoritative").
+ */
+export async function getTransaction(
+  config: GetTransactionConfig,
+  transactionId: string,
+): Promise<KashierTransaction> {
+  const baseUrl = config.baseUrl ?? DEFAULT_TRANSACTIONS_BASE_URL;
+  const response = await fetch(
+    `${baseUrl}/v2/aggregator/transactions/${transactionId}`,
+    {
+      headers: { Authorization: config.secretKey },
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Kashier transaction lookup failed with status ${response.status}: ${body}`,
+    );
+  }
+
+  const data = (await response.json()) as {
+    status?: string;
+    lastStatus?: string;
+  };
+  if (!data.status) {
+    throw new Error("Kashier transaction lookup response is missing status");
+  }
+
+  return { status: data.status, lastStatus: data.lastStatus, raw: data };
+}
