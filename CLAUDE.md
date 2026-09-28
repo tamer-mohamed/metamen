@@ -17,7 +17,7 @@ All money is stored and computed in integer piastres, never floats.
 ## Kashier API auth
 Kashier has two distinct integration paths, and they authenticate differently. Know which one you are on.
 
-**Hosted checkout (Payment Sessions) — our default.** `POST /v3/payment/sessions` on `api.kashier.io` (test: `test-api.kashier.io`), authenticated with `Authorization: <Secret Key>` plus an `api-key: <Payment API Key>` header. **No hash.** Returns a `sessionUrl` used as a redirect target or `<iframe src>`. Supports `manualCapture` for authorize-now/capture-later, and `connectedAccount.merchantId` for transacting on behalf of a sub-merchant.
+**Hosted checkout (Payment Sessions) — our default.** `POST /v3/payment/sessions` on `api.kashier.io` (test: `test-api.kashier.io`), authenticated with `Authorization: <Secret Key>` plus an `api-key: <Payment API Key>` header. **No hash.** Returns a `sessionUrl` used as a redirect target or `<iframe src>`. Supports `manualCapture` for authorize-now/capture-later, and `connectedAccount` for transacting on behalf of a sub-merchant.
 
 **Direct API — avoid.** `POST /v3/orders` on `fep.kashier.io` is the own-card-form path and *is* the one authenticated with a `Kashier-Hash` header (HMAC-SHA256 over `/?payment={mid}.{reference}.{amount}.{currency}`, keyed with the Payment API Key). Taking this path puts card data in our scope and escalates PCI obligations, so do not use it without an explicit decision to do so.
 
@@ -29,7 +29,7 @@ Never name any environment variable holding a Kashier secret with a `NEXT_PUBLIC
 `@metamen/core` enforces this split at the package boundary: `@metamen/core` is the browser-safe entry and must never touch the secret key, while `@metamen/core/server` holds every secret-key operation (capture, void, refund). Never import the `/server` entry from client code.
 
 ## Metamen never custodies merchant Kashier credentials
-Merchants keep their own Kashier account. We reach their transactions through Kashier **Connected Accounts**: Metamen is the platform, the merchant is a connected account that authorizes the link, and we pass `connectedAccount: { merchantId: "MID-..." }` using *our own* platform keys. We never store, receive or proxy a merchant's Kashier secret key.
+Merchants keep their own Kashier account. We reach their transactions through Kashier **Connected Accounts**: Metamen is the platform, the merchant is a connected account that authorizes the link, and we pass `connectedAccount: "MID-..."` (the merchant id as a plain string — confirmed live; Kashier's session API rejects the object form `{ merchantId }` with `"connectedAccount" must be a string`) using *our own* platform keys. We never store, receive or proxy a merchant's Kashier secret key.
 
 Holding those keys would make us a PCI service provider and likely pull us into CBE payment-aggregator licensing. Carrier credentials are a different matter and may be held, since they carry no card data.
 
