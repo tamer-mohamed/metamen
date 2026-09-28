@@ -27,7 +27,7 @@ Capture, void and refund (`PUT /v3/orders/:orderId`, on `fep.kashier.io` / `test
 
 **Void has a same-day window; refund doesn't.** Voiding a `PAY` or `CAPTURE` transaction only works same-day — past it, use refund instead. Voiding an unused `AUTHORIZE` hold (a release) is not subject to that window.
 
-**Re-verifying a transaction is a different endpoint entirely.** `PUT /v3/orders/:orderId` has no `GET` (confirmed empirically — it 400s "routing key is missing from the URL"). To look up a transaction's real status before trusting a webhook, use `GET /v2/aggregator/transactions/:transactionId` on `api.kashier.io` / `test-api.kashier.io` — a *third* host/path family, keyed by `transactionId` (not `orderId`), with the secret key as `Authorization` and no other headers.
+**Re-verifying a transaction is a different endpoint entirely.** `PUT /v3/orders/:orderId` has no `GET` (confirmed empirically — it 400s "routing key is missing from the URL"). To look up a transaction's real status before trusting a webhook, use `GET /v2/aggregator/transactions/:transactionId` on `api.kashier.io` / `test-api.kashier.io` — a *third* host/path family, keyed by `transactionId` (not `orderId`), with the secret key as `Authorization` and no other headers. **The response nests everything under `body`** (`body.status`, `body.order.orderId`, …) — confirmed against a real completed test transaction; the docs' field list reads as flatter than it is.
 
 ## Secrets
 Never name any environment variable holding a Kashier secret with a `NEXT_PUBLIC_` prefix — that prefix ships to the browser bundle in Next.js.

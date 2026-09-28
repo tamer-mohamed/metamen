@@ -113,7 +113,10 @@ describe("getTransaction", () => {
   const config = { secretKey: "test-secret" };
 
   it("looks up a transaction on the transactions host, not the sessions or orders host", async () => {
-    const fetchMock = mockFetchOnce(200, { status: "SUCCESS", lastStatus: "CAPTURED" });
+    // Real shape confirmed against a live completed transaction — everything
+    // nests under `body`, unlike the flatter shape the docs' field list implies.
+    const body = { body: { status: "SUCCESS", order: { orderId: "ORD-real-1" } } };
+    const fetchMock = mockFetchOnce(200, body);
 
     const result = await getTransaction(config, "TX-1");
 
@@ -123,11 +126,7 @@ describe("getTransaction", () => {
         headers: expect.objectContaining({ Authorization: "test-secret" }),
       }),
     );
-    expect(result).toEqual({
-      status: "SUCCESS",
-      lastStatus: "CAPTURED",
-      raw: { status: "SUCCESS", lastStatus: "CAPTURED" },
-    });
+    expect(result).toEqual({ status: "SUCCESS", orderId: "ORD-real-1", raw: body });
   });
 
   it("throws when Kashier can't find the transaction", async () => {

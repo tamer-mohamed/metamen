@@ -76,6 +76,13 @@ export async function applyVerifiedFulfillmentUpdate(
     };
   }
 
+  if (transaction.orderId && transaction.orderId !== params.orderId) {
+    return {
+      outcome: "rejected",
+      reason: `Transaction ${params.transactionId} belongs to order '${transaction.orderId}', not the claimed '${params.orderId}' — refusing to act on a mismatched pair.`,
+    };
+  }
+
   const action = await applyFulfillmentUpdate(config, params.orderId, params.update);
   return { outcome: "applied", action };
 }

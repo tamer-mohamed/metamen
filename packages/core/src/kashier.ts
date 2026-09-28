@@ -234,8 +234,8 @@ export interface GetTransactionConfig {
 
 export interface KashierTransaction {
   status: "SUCCESS" | "FAILURE" | "PENDING" | string;
-  /** The order's money state (e.g. CAPTURED) — distinct from this transaction's own status. */
-  lastStatus?: string;
+  /** The Kashier order this transaction belongs to — cross-check against a caller's claimed orderId before trusting it. */
+  orderId?: string;
   raw: unknown;
 }
 
@@ -247,6 +247,10 @@ export interface KashierTransaction {
  * driving money off an inbound webhook must not act on that webhook's claims
  * alone — fetch the transaction here first (CLAUDE.md: "Webhooks are not
  * authoritative").
+ *
+ * The response nests everything under `body` — confirmed against a real
+ * completed transaction; do not trust the flatter shape the docs' field list
+ * implies.
  */
 export async function getTransaction(
   config: GetTransactionConfig,
@@ -261,19 +265,18 @@ export async function getTransaction(
   );
 
   if (!response.ok) {
-    const body = await response.text().catch(() => "");
+    const responseBody = await response.text().catch(() => "");
     throw new Error(
-      `Kashier transaction lookup failed with status ${response.status}: ${body}`,
+      `Kashier transaction lookup failed with status ${response.status}: ${responseBody}`,
     );
   }
 
   const data = (await response.json()) as {
-    status?: string;
-    lastStatus?: string;
+    body?: { status?: string; order?: { orderId?: string } };
   };
-  if (!data.status) {
-    throw new Error("Kashier transaction lookup response is missing status");
+  if (!data.body?.status) {
+    throw new Error("Kashier transaction lookup response is missing body.status");
   }
 
-  return { status: data.status, lastStatus: data.lastStatus, raw: data };
+  return { status: data.body.status, orderId: data.body.order?.orderId, raw: data };
 }

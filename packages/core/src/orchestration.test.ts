@@ -89,7 +89,7 @@ describe("applyVerifiedFulfillmentUpdate", () => {
 
   it("verifies the transaction with Kashier before refunding", async () => {
     const fetchMock = mockFetchSequence([
-      { status: 200, body: { status: "SUCCESS", lastStatus: "CAPTURED" } },
+      { status: 200, body: { body: { status: "SUCCESS", order: { orderId: "ORD-1" } } } },
       { status: 200, body: { status: "SUCCESS" } },
     ]);
 
@@ -114,7 +114,7 @@ describe("applyVerifiedFulfillmentUpdate", () => {
 
   it("refuses to act when the transaction isn't SUCCESS, without ever calling refund", async () => {
     const fetchMock = mockFetchSequence([
-      { status: 200, body: { status: "PENDING" } },
+      { status: 200, body: { body: { status: "PENDING", order: { orderId: "ORD-1" } } } },
     ]);
 
     const result = await applyVerifiedFulfillmentUpdate(config, {
@@ -130,9 +130,27 @@ describe("applyVerifiedFulfillmentUpdate", () => {
     });
   });
 
+  it("refuses to act when the transaction belongs to a different order than claimed", async () => {
+    const fetchMock = mockFetchSequence([
+      { status: 200, body: { body: { status: "SUCCESS", order: { orderId: "ORD-someone-else" } } } },
+    ]);
+
+    const result = await applyVerifiedFulfillmentUpdate(config, {
+      orderId: "ORD-1",
+      transactionId: "TX-1",
+      update: { status: "returned" },
+    });
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(result).toEqual({
+      outcome: "rejected",
+      reason: expect.stringContaining("mismatched pair"),
+    });
+  });
+
   it("still verifies but never calls refund for a no-op status like delivered", async () => {
     const fetchMock = mockFetchSequence([
-      { status: 200, body: { status: "SUCCESS" } },
+      { status: 200, body: { body: { status: "SUCCESS", order: { orderId: "ORD-1" } } } },
     ]);
 
     const result = await applyVerifiedFulfillmentUpdate(config, {
