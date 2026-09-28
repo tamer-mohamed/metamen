@@ -21,7 +21,11 @@ Kashier has two distinct integration paths, and they authenticate differently. K
 
 **Direct API — avoid.** `POST /v3/orders` on `fep.kashier.io` is the own-card-form path and *is* the one authenticated with a `Kashier-Hash` header (HMAC-SHA256 over `/?payment={mid}.{reference}.{amount}.{currency}`, keyed with the Payment API Key). Taking this path puts card data in our scope and escalates PCI obligations, so do not use it without an explicit decision to do so.
 
-Capture, void and refund (`PUT /v3/orders/:orderId`) use the `Authorization` secret key and take no hash, on either path.
+Capture, void and refund (`PUT /v3/orders/:orderId`, on `fep.kashier.io` / `test-fep.kashier.io` — the same host as the Direct API, but not the Direct API itself) use the `Authorization` secret key and take no hash, on either path. Body is `{ apiOperation: "CAPTURE" | "VOID" | "REFUND", transaction?: { amount?, targetTransactionId? }, reason? }`; omit `transaction` for a full action on the order's own pay/authorize transaction, or set `targetTransactionId` to act on a specific prior transaction (e.g. releasing a hold is `VOID` with the authorize transaction's id).
+
+**Manual capture needs Kashier's approval too.** Like Connected Accounts, the Authorization Capture feature (`manualCapture` on sessions, and the capture operation itself) is off until Kashier's account team enables it — confirm this is actually on before assuming authorize-now/capture-later works.
+
+**Void has a same-day window; refund doesn't.** Voiding a `PAY` or `CAPTURE` transaction only works same-day — past it, use refund instead. Voiding an unused `AUTHORIZE` hold (a release) is not subject to that window.
 
 ## Secrets
 Never name any environment variable holding a Kashier secret with a `NEXT_PUBLIC_` prefix — that prefix ships to the browser bundle in Next.js.
@@ -34,6 +38,11 @@ Merchants keep their own Kashier account. We reach their transactions through Ka
 Holding those keys would make us a PCI service provider and likely pull us into CBE payment-aggregator licensing. Carrier credentials are a different matter and may be held, since they carry no card data.
 
 Connected Accounts is behind a per-merchant Kashier feature flag that is **off by default** and can only be enabled by Kashier, and merchant onboarding is a manual dashboard flow with no API. Both facts constrain how self-serve onboarding can be.
+
+## Settlement scope (for now): buyer payment only
+Kashier has no split-payment or revenue-share API — a capture/void/refund moves the *entire* amount of one transaction, paid from or into **this account's own Kashier balance** (confirmed against the refund docs: "Refunds are paid from your available Kashier balance"). There is no per-transaction mechanism to route part of a payment to a seller and keep part as a platform fee.
+
+So for now, `@metamen/core`'s job stops at the buyer's payment: capture, void, or refund the one transaction in full or in part. Whatever a seller is owed is **not** disbursed through Kashier at all — it's tracked in our own ledger and paid out to the seller by some other means (e.g. a bank transfer), which is unbuilt and out of scope until designed. Do not model "seller wallet," "sub-merchant balance," or fee-splitting as a Kashier API call — it isn't one.
 
 ## We do not rebuild payment acceptance
 Kashier already ships hosted checkout, payment links, and official plugins for WooCommerce/Shopify/Magento/OpenCart/PrestaShop/Wix. Our product is the **orchestration between payment and fulfillment** — capture on ship, void on fulfillment failure, keeping the two state machines reconciled — plus multi-carrier shipping, which Kashier does not do at all.

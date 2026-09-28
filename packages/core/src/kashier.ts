@@ -100,3 +100,123 @@ export async function createPaymentSession(
 
   return { sessionUrl: data.sessionUrl };
 }
+
+// Capture, void and refund all live on a different host (fep, not api) and a
+// different endpoint shape (PUT /v3/orders/:orderId with an apiOperation)
+// than payment sessions. Only the secret key is needed — no api-key, no hash.
+const DEFAULT_ORDERS_BASE_URL = "https://test-fep.kashier.io";
+
+export interface KashierOrderActionConfig {
+  secretKey: string;
+  /** Overridable for testing; defaults to the Kashier test orders API. */
+  baseUrl?: string;
+}
+
+export interface KashierOrderActionParams {
+  /** The Kashier order id (not the productId/order reference passed at session creation). */
+  orderId: string;
+  /**
+   * Targets a specific prior transaction on the order — e.g. the `transactionId`
+   * from an AUTHORIZE, to capture or release that specific hold. Omit to act on
+   * the order's own pay/authorize transaction.
+   */
+  targetTransactionId?: string;
+  /** Omit for a full capture/void/refund; provide for a partial one. */
+  amountInPiastres?: Piastres;
+}
+
+export interface KashierOrderActionResult {
+  status: string;
+  raw: unknown;
+}
+
+/**
+ * NOTE: Kashier's docs show `transaction.amount` as a bare number (`3`), unlike
+ * the quoted two-decimal string payment sessions use (`"450.00"`). Neither the
+ * unit (EGP vs piastres) nor the exact numeric formatting has been confirmed
+ * against a live capture/void/refund yet — doing so needs a completed
+ * AUTHORIZE transaction, which needs the Authorization Capture feature enabled
+ * by Kashier first (see CLAUDE.md). Verify this against a real sandbox
+ * transaction before relying on it for a real amount.
+ */
+function toOrderActionAmount(value: Piastres): number {
+  return Number(piastresToKashierAmount(value));
+}
+
+async function mutateOrder(
+  config: KashierOrderActionConfig,
+  apiOperation: "CAPTURE" | "VOID" | "REFUND",
+  params: KashierOrderActionParams,
+  reason?: string,
+): Promise<KashierOrderActionResult> {
+  const baseUrl = config.baseUrl ?? DEFAULT_ORDERS_BASE_URL;
+
+  const transaction: Record<string, unknown> = {};
+  if (params.amountInPiastres !== undefined) {
+    transaction.amount = toOrderActionAmount(params.amountInPiastres);
+  }
+  if (params.targetTransactionId) {
+    transaction.targetTransactionId = params.targetTransactionId;
+  }
+
+  const response = await fetch(`${baseUrl}/v3/orders/${params.orderId}`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: config.secretKey,
+    },
+    body: JSON.stringify({
+      apiOperation,
+      ...(Object.keys(transaction).length > 0 ? { transaction } : {}),
+      ...(reason ? { reason } : {}),
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text().catch(() => "");
+    throw new Error(
+      `Kashier ${apiOperation.toLowerCase()} request failed with status ${response.status}: ${body}`,
+    );
+  }
+
+  const data = (await response.json()) as { status?: string };
+  return { status: data.status ?? "UNKNOWN", raw: data };
+}
+
+/**
+ * Captures a full or partial amount of a previously authorized order — the
+ * buyer's payment only. Requires the Authorization Capture feature to be
+ * enabled for this account by Kashier first.
+ */
+export function captureOrder(
+  config: KashierOrderActionConfig,
+  params: KashierOrderActionParams,
+): Promise<KashierOrderActionResult> {
+  return mutateOrder(config, "CAPTURE", params);
+}
+
+/**
+ * Releases an authorized hold, or cancels a same-day pay/capture. Only works
+ * inside a same-day window for pay/capture targets (releasing an unused
+ * authorize hold is not subject to that window) — past it, use refundOrder.
+ */
+export function voidOrder(
+  config: KashierOrderActionConfig,
+  params: KashierOrderActionParams,
+): Promise<KashierOrderActionResult> {
+  return mutateOrder(config, "VOID", params);
+}
+
+/**
+ * Refunds a full or partial amount, paid from this account's own Kashier
+ * balance — the buyer's payment only. There is no Kashier primitive for
+ * splitting that money across multiple parties; seller settlement is handled
+ * entirely outside Kashier (see CLAUDE.md).
+ */
+export function refundOrder(
+  config: KashierOrderActionConfig,
+  params: KashierOrderActionParams & { reason?: string },
+): Promise<KashierOrderActionResult> {
+  const { reason, ...rest } = params;
+  return mutateOrder(config, "REFUND", rest, reason);
+}

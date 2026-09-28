@@ -10,9 +10,15 @@ export {
 } from "./money.js";
 
 export {
+  captureOrder,
   createPaymentSession,
   piastresToKashierAmount,
+  refundOrder,
+  voidOrder,
   type CreatePaymentSessionParams,
   type KashierConfig,
+  type KashierOrderActionConfig,
+  type KashierOrderActionParams,
+  type KashierOrderActionResult,
   type PaymentSession,
 } from "./kashier.js";
