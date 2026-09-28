@@ -31,8 +31,12 @@ export async function POST(request: NextRequest) {
       {
         productId: product.id,
         amountInPiastres: product.priceInPiastres,
+        // Placeholder sub-merchant id — not a real Kashier Connected Account.
+        // Exercises the connectedAccount code path for the demo; Kashier will
+        // reject this specific value, so checkout will fail until swapped for
+        // a real MID once Connected Accounts is actually enabled for us.
         connectedAccount: {
-          merchantId: "MID-XXXXX-XXX"
+          merchantId: "MID-XXXXX-XXX",
         },
         // Kashier rejects "localhost" as a merchantRedirect hostname (it
         // requires a publicly-resolvable-looking domain), so local dev needs

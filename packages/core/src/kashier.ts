@@ -30,6 +30,12 @@ export interface CreatePaymentSessionParams {
   productId: string;
   amountInPiastres: Piastres;
   merchantRedirect: string;
+  /**
+   * Transacts on behalf of a merchant via Kashier Connected Accounts, using
+   * `config`'s platform keys rather than the merchant's own secret key. Omit
+   * to charge directly to the account identified by `config.merchantId`.
+   */
+  connectedAccount?: { merchantId: string };
 }
 
 export interface PaymentSession {
@@ -56,6 +62,7 @@ export async function createPaymentSession(
       merchantRedirect: params.merchantRedirect,
       display: "en",
       type: "one-time",
+      ...(params.connectedAccount ? { connectedAccount: params.connectedAccount } : {}),
       // Restricted to wallet + InstaPay only, per request. Neither has been
       // proven end-to-end here yet — InstaPay previously failed live with
       // "Invalid Merchant ID" (an account-side provisioning gap, not
