@@ -34,8 +34,12 @@ export interface CreatePaymentSessionParams {
    * Transacts on behalf of a merchant via Kashier Connected Accounts, using
    * `config`'s platform keys rather than the merchant's own secret key. Omit
    * to charge directly to the account identified by `config.merchantId`.
+   * Kashier's session API takes this as the merchant id string directly
+   * (confirmed live: `{ merchantId }` is rejected with `"connectedAccount"
+   * must be a string`), despite CLAUDE.md's Connected Accounts note showing
+   * the object form — that note needs updating to match.
    */
-  connectedAccount?: { merchantId: string };
+  connectedAccount?: string;
 }
 
 export interface PaymentSession {
